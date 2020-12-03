@@ -62,6 +62,27 @@
       </div>
       <small>все кнопки в консоль данные выводят</small>
     </div>
+    <div class="button btn btn-primary" v-on:click="preparePicts">
+      Получить картинки
+    </div>
+    <div class="wrap" v-on:mouseup="onStopDragging" v-on:mousemove="onDragging">
+      <div
+        class="item"
+        v-for="(item, index) in items"
+        :key="item.name"
+        v-bind:style="{ left: item.x + 'px', top: item.y + 'px' }"
+        v-on:mousedown="onStartDrag(item)"
+        v-on:mousemove="onstopPropagation"
+        v-on:mouseup="onStopDragging"
+      >
+        {{ index }}
+      </div>
+      <div
+        class="cart"
+        v-on:mousemove="onGetToCart"
+        v-on:mouseup="onStopDragging"
+      ></div>
+    </div>
   </div>
 </template>
 
@@ -83,9 +104,59 @@ export default {
       dName: '',
       dType: '1',
       dFile: null,
+      items: [
+        { name: 'item1', x: 0, y: 0 },
+        { name: 'item2', x: 0, y: 0 },
+        { name: 'item3', x: 0, y: 0 },
+      ],
     };
   },
   methods: {
+    onGetToCart(event) {
+      event.stopPropagation();
+      this.items.forEach((item, index) => {
+        if (item.isDragging) {
+          if (item.fits) {
+            item.isDragging = false;
+          } else {
+            item.isDragging = false;
+            item.x = index * 40;
+            item.y = 0;
+          }
+        }
+      });
+    },
+    onstopPropagation(event) {
+      event.stopPropagation(); // исправляем тот костыль
+    },
+    onDragging(event) {
+      this.items.forEach((item) => {
+        if (item.isDragging) {
+          item.x = event.offsetX;
+          item.y = event.offsetY;
+        }
+      });
+    },
+    onStartDrag(item) {
+      item.isDragging = true;
+    },
+    onStopDragging() {
+      this.items.forEach((item, index) => {
+        if (item.isDragging) {
+          item.x = index * 40;
+          item.y = 0;
+          item.isDragging = false;
+        }
+      });
+    },
+    preparePicts() {
+      this.items.forEach((item, index) => {
+        item.x = index * 40;
+        item.y = 0;
+        item.fits = index % 2 ? true : false; // это замени алгоритмом для вычисления пригодности
+        item.isDragging = false;
+      });
+    },
     async handleFileUpload() {
       let file = this.$refs.file.files[0];
       this.dFile = await toBase64(file).catch((e) => Error(e));
@@ -107,4 +178,30 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+.wrap {
+  position: relative;
+  width: 100%;
+  height: 400px;
+}
+.cart {
+  position: absolute;
+  bottom: 0px;
+  height: 50px;
+  width: 100%;
+  background: red;
+  z-index: 1;
+}
+.item {
+  position: absolute;
+  top: 0px;
+  left: 10px;
+  width: 30px;
+  height: 30px;
+  background: green;
+  border: 1px solid black;
+  cursor: pointer;
+  user-select: none;
+  z-index: 2;
+}
+</style>
