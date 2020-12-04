@@ -75,7 +75,9 @@
         v-on:mousemove="onstopPropagation"
         v-on:mouseup="onStopDragging"
       >
-        {{ index }}
+        <template v-if="true">
+          {{ index }}
+        </template>
       </div>
       <div
         class="cart"
@@ -104,14 +106,29 @@ export default {
       dName: '',
       dType: '1',
       dFile: null,
-      items: [
-        { name: 'item1', x: 0, y: 0 },
-        { name: 'item2', x: 0, y: 0 },
-        { name: 'item3', x: 0, y: 0 },
-      ],
+      // items: [
+      //   // { name: 'item1', x: 0, y: 0 },
+      //   // { name: 'item2', x: 0, y: 0 },
+      //   // { name: 'item3', x: 0, y: 0 },
+      // ],
+      items: null,
+      testfile: null,
     };
   },
+  async created() {
+    await this.getDataFromApi();
+    this.preparePicts();
+  },
   methods: {
+    async getDataFromApi() {
+      try {
+        let response = await fetch('http://localhost:3000/files');
+        this.items = await response.json();
+        console.log(this.items[0]);
+      } catch (e) {
+        console.error(e);
+      }
+    },
     onGetToCart(event) {
       event.stopPropagation();
       this.items.forEach((item, index) => {
